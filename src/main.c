@@ -11,9 +11,15 @@
 #define PIN_VUSB_DM PB3
 #define PIN_VUSB_DP PB2
 
+
 #define PIN_RGB_R   PB1
+#define PIN_PWM_R   OCR0B
+
 #define PIN_RGB_G   PB0
+#define PIN_PWM_G   OCR0A
+
 #define PIN_RGB_B   PB4
+#define PIN_PWM_B   OCR1B
 
 #define USB_LED_SETLED 0
 
@@ -48,43 +54,36 @@ void hadUsbReset() {
 
 USB_PUBLIC uint8_t usbFunctionSetup(uint8_t data[8]) {
     usbRequest_t *rq = (void*)data;
-    uint8_t red, green, blue;
 
     switch(rq->bRequest) {
         case USB_LED_SETLED:
-            red = rq->wValue.bytes[0];
-            green = rq->wValue.bytes[1];
-            blue = rq->wIndex.bytes[0];
-
-            if(red) {
-                PORTB |= _BV(PIN_RGB_R);
-            } else {
-                PORTB &= ~_BV(PIN_RGB_R);
-            }
-
-            if(green) {
-                PORTB |= _BV(PIN_RGB_G);
-            } else {
-                PORTB &= ~_BV(PIN_RGB_G);
-            }
-
-            if(blue) {
-                PORTB |= _BV(PIN_RGB_B);
-            } else {
-                PORTB &= ~_BV(PIN_RGB_B);
-            }
-
+            PIN_PWM_R = 255 - rq->wValue.bytes[0];
+            PIN_PWM_G = 255 - rq->wValue.bytes[1];
+            PIN_PWM_B = 255 - rq->wIndex.bytes[0];
             break;
     }
 
     return 0;
 }
 
-int main (void) {
+int main(void) {
     wdt_enable(WDTO_1S);
 
     // Set up RGB outputs. DM/DP pins reset in the right state.
     DDRB = _BV(PIN_RGB_R) | _BV(PIN_RGB_G) | _BV(PIN_RGB_B);
+
+    // Enable OC0A and OC0B PWM
+    TCCR0A |= _BV(COM0A0) | _BV(COM0A1) | _BV(COM0B0) | _BV(COM0B1) | _BV(WGM00) | _BV(WGM01);
+    TCCR0B |= _BV(WGM02) | _BV(CS00) | _BV(CS01);
+
+    // Enable OC1B PWM
+    GTCCR |= _BV(PWM1B) | _BV(COM1B0) | _BV(COM1B1);
+    TCCR1 |= _BV(COM1A0) | _BV(COM1A1) | _BV(CS10) | _BV(CS11) | _BV(CS12);
+
+    // Disable all colors by default
+    PIN_PWM_R = 255;
+    PIN_PWM_G = 255;
+    PIN_PWM_B = 255;
 
     usbInit();
 
