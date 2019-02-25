@@ -71,10 +71,10 @@ int main(void) {
 
     // Set up RGB outputs. DM/DP pins reset in the right state.
     DDRB = _BV(PIN_RGB_R) | _BV(PIN_RGB_G) | _BV(PIN_RGB_B);
-
+    
     // Enable OC0A and OC0B PWM
     TCCR0A |= _BV(COM0A0) | _BV(COM0A1) | _BV(COM0B0) | _BV(COM0B1) | _BV(WGM00) | _BV(WGM01);
-    TCCR0B |= _BV(WGM02) | _BV(CS00) | _BV(CS01);
+    TCCR0B |= /*_BV(WGM02) |*/ _BV(CS00) | _BV(CS01);
 
     // Enable OC1B PWM
     GTCCR |= _BV(PWM1B) | _BV(COM1B0) | _BV(COM1B1);
